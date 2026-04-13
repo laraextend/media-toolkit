@@ -105,11 +105,50 @@ return [
     ],
 
     // ─────────────────────────────────────────────────────────────
-    //  FUTURE MEDIA TYPES  (Phase 2 / 3)
+    //  VIDEO  (Phase 2)
+    //  No processing — source files are served directly from
+    //  public/<output_dir>/originals/ without transcoding.
     // ─────────────────────────────────────────────────────────────
 
-    'video' => [],
+    'video' => [
+        // Allowed source extensions for VideoBuilder
+        'allowed_extensions' => ['mp4', 'webm', 'ogg', 'mov'],
 
-    'audio' => [],
+        // Default <video> element settings
+        'defaults' => [
+            'controls' => true,
+            'preload'  => 'metadata',
+        ],
+    ],
+
+    // ─────────────────────────────────────────────────────────────
+    //  AUDIO  (Phase 3)
+    //  No processing — source files are served directly from
+    //  public/<output_dir>/originals/ without transcoding.
+    // ─────────────────────────────────────────────────────────────
+
+    'audio' => [
+        // Allowed source extensions for AudioBuilder
+        'allowed_extensions' => ['mp3', 'ogg', 'wav', 'aac', 'm4a', 'opus', 'flac'],
+
+        // Default <audio> element settings
+        'defaults' => [
+            'controls' => true,
+            'preload'  => 'metadata',
+        ],
+    ],
+
+    // ─────────────────────────────────────────────────────────────
+    //  SVG  (Phase 4)
+    //  Default mode: served as <img src="...">.
+    //  Inline mode (->inline()): SVG content embedded in HTML,
+    //  with <script> and on* attributes filtered by default.
+    // ─────────────────────────────────────────────────────────────
+
+    'svg' => [
+        // Whether to sanitize inline SVG output by default.
+        // Can be overridden per call: ->inline(sanitize: false)
+        'sanitize_inline' => true,
+    ],
 
 ];

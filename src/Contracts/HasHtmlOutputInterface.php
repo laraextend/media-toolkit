@@ -18,21 +18,11 @@ interface HasHtmlOutputInterface
     public function fetchpriority(string $priority): static;
 
     /**
-     * Returns the HTML output.
-     * The rendered element depends on the active output mode:
-     *   (default)         → <img src="..." ...>
-     *   ->responsive(...) → <img src="..." srcset="..." sizes="...">
-     *   ->picture(...)    → <picture><source .../><img .../></picture>
+     * Returns the HTML output for the media element.
      *
-     * @param string      $alt        Alt text for accessibility
-     * @param string      $class      CSS class(es) — applied to <img> or <picture>
-     * @param string|null $id         HTML id attribute
-     * @param array       $attributes Additional HTML attributes as key-value pairs
+     * Each concrete builder defines its own html() signature appropriate
+     * for the media type it handles. ImageBuilder uses
+     * html(string $alt, string $class, ?string $id, array $attributes).
+     * Video/audio builders omit $alt; SvgBuilder keeps it.
      */
-    public function html(
-        string  $alt        = '',
-        string  $class      = '',
-        ?string $id         = null,
-        array   $attributes = [],
-    ): string;
 }

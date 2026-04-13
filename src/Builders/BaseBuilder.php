@@ -107,13 +107,6 @@ abstract class BaseBuilder implements
 
     abstract public function url(): string;
 
-    abstract public function html(
-        string  $alt        = '',
-        string  $class      = '',
-        ?string $id         = null,
-        array   $attributes = [],
-    ): string;
-
     // ─────────────────────────────────────────────────────────────
     //  INTERNAL GUARDS
     // ─────────────────────────────────────────────────────────────
@@ -278,5 +271,74 @@ abstract class BaseBuilder implements
         }
 
         return $dimension > 0 ? $dimension : null;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  SHARED PATH SECURITY GUARDS
+    //  Used by ImageBuilder, VideoBuilder, AudioBuilder, SvgBuilder.
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Reject any path that contains null bytes, CRLF, or directory-traversal sequences.
+     * Used as a fast pre-resolution guard on raw path inputs (e.g. watermark URLs).
+     *
+     * @throws MediaBuilderException
+     */
+    protected function assertNoTraversal(string $path): void
+    {
+        if (preg_match('/[\x00\r\n]/', $path) || preg_match('#(^|[/\\\\])\.\.([/\\\\]|$)#', $path)) {
+            throw new MediaBuilderException('Invalid path: directory traversal is not allowed.');
+        }
+    }
+
+    /**
+     * Validate a media source path: checks control characters, directory traversal,
+     * and enforces the provided file-extension whitelist.
+     *
+     * @param  string[]  $allowedExtensions
+     * @throws MediaBuilderException
+     */
+    protected function assertSafeMediaPath(string $path, array $allowedExtensions): void
+    {
+        if (preg_match('/[\x00\r\n]/', $path)) {
+            throw new MediaBuilderException('Invalid path: control characters are not allowed.');
+        }
+
+        if (preg_match('#(^|[/\\\\])\.\.([/\\\\]|$)#', $path)) {
+            throw new MediaBuilderException('Invalid path: directory traversal is not allowed.');
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        if ($ext !== '' && ! in_array($ext, $allowedExtensions, true)) {
+            throw new MediaBuilderException(
+                "Invalid file type: '.{$ext}' is not an allowed media format."
+            );
+        }
+    }
+
+    /**
+     * Ensure a resolved absolute path is confined within an allowed root directory.
+     * Uses realpath() when the file exists; falls back to a string prefix check otherwise.
+     *
+     * @throws MediaBuilderException
+     */
+    protected function assertSafeResolvedPath(string $resolved, string $allowedRoot): void
+    {
+        $real = realpath($resolved);
+        $root = realpath($allowedRoot) ?: rtrim($allowedRoot, '/\\');
+
+        if ($real !== false) {
+            if (! str_starts_with($real, $root . DIRECTORY_SEPARATOR) && $real !== $root) {
+                throw new MediaBuilderException('Invalid path: directory traversal is not allowed.');
+            }
+        } else {
+            $normalised = str_replace('\\', '/', $resolved);
+            $rootSlash  = rtrim(str_replace('\\', '/', $root), '/') . '/';
+
+            if (! str_starts_with($normalised, $rootSlash)) {
+                throw new MediaBuilderException('Invalid path: directory traversal is not allowed.');
+            }
+        }
     }
 }

@@ -5,14 +5,19 @@ namespace Laraextend\MediaToolkit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Laraextend\MediaToolkit\Builders\AudioBuilder;
 use Laraextend\MediaToolkit\Builders\ImageBuilder;
+use Laraextend\MediaToolkit\Builders\SvgBuilder;
+use Laraextend\MediaToolkit\Builders\VideoBuilder;
 use Laraextend\MediaToolkit\Cache\ManifestCache;
 use Laraextend\MediaToolkit\Console\Commands\CacheClear;
 use Laraextend\MediaToolkit\Console\Commands\CacheWarm;
 use Laraextend\MediaToolkit\Console\Commands\ProcessPending;
 use Laraextend\MediaToolkit\Failures\FailureRegistry;
 use Laraextend\MediaToolkit\Processing\ImageProcessor;
+use Laraextend\MediaToolkit\Rendering\AudioHtmlRenderer;
 use Laraextend\MediaToolkit\Rendering\ImageHtmlRenderer;
+use Laraextend\MediaToolkit\Rendering\VideoHtmlRenderer;
 
 class MediaToolkitServiceProvider extends ServiceProvider
 {
@@ -46,6 +51,8 @@ class MediaToolkitServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(ImageHtmlRenderer::class);
+        $this->app->singleton(VideoHtmlRenderer::class);
+        $this->app->singleton(AudioHtmlRenderer::class);
 
         $this->app->singleton(FailureRegistry::class, function (): FailureRegistry {
             return new FailureRegistry(storage_path('media-toolkit/failures.json'));
@@ -66,6 +73,32 @@ class MediaToolkitServiceProvider extends ServiceProvider
                         processor: $this->app->make(ImageProcessor::class),
                         cache:     $this->app->make(ManifestCache::class),
                         renderer:  $this->app->make(ImageHtmlRenderer::class),
+                    );
+                }
+
+                public function video(string $path): VideoBuilder
+                {
+                    return new VideoBuilder(
+                        path:     $path,
+                        cache:    $this->app->make(ManifestCache::class),
+                        renderer: $this->app->make(VideoHtmlRenderer::class),
+                    );
+                }
+
+                public function audio(string $path): AudioBuilder
+                {
+                    return new AudioBuilder(
+                        path:     $path,
+                        cache:    $this->app->make(ManifestCache::class),
+                        renderer: $this->app->make(AudioHtmlRenderer::class),
+                    );
+                }
+
+                public function svg(string $path): SvgBuilder
+                {
+                    return new SvgBuilder(
+                        path:  $path,
+                        cache: $this->app->make(ManifestCache::class),
                     );
                 }
             };

@@ -11,13 +11,16 @@
 
 `laraextend/media-toolkit` handles the heavy lifting for you: images are resized, cropped, filtered, compressed, converted to modern formats (WebP, AVIF) and rendered as responsive `<img>` or `<picture>` tags via a clean fluent API.
 
-> **Roadmap:** Future releases will extend the toolkit to cover animated images (GIF/APNG/WebP animated), vector graphics (SVG), audio and video processing — all behind the same `Media::` facade.
+> **Roadmap:** Future releases will extend the toolkit to cover animated images (GIF/APNG/WebP animated) and video transcoding — all behind the same `Media::` facade.
 
 ---
 
 ## ✨ Features
 
 - **🔗 Fluent Builder API** — `Media::image($path)->resize(800)->grayscale()->html(alt: 'Hero')`
+- **🎬 Video Support** — `Media::video($path)->controls()->muted()->html(class: 'w-full')`
+- **🎵 Audio Support** — `Media::audio($path)->controls()->preload('none')->html()`
+- **🖼️ SVG Support** — `Media::svg($path)->html(alt: 'Icon')` or `->inline()->html(class: 'fill-current')`
 - **🧩 Four Blade Components** — `<x-media::img>`, `<x-media::responsive-img>`, `<x-media::picture>`, `<x-media::img-url>`
 - **🖼️ Four Blade Helpers** — `img()`, `responsive_img()`, `picture()` and `img_url()` (deprecated, still available)
 - **📐 Image Transformations** — resize, fit, stretch, crop with automatic proportional scaling
@@ -773,6 +776,147 @@ php artisan media:process-pending --clear
 | AVIF | ✅ (if `imageavif` available, PHP 8.1+) | ✅ (if compiled with AVIF) |
 
 > Imagick is automatically preferred when available and generally offers better quality and performance for large images.
+
+---
+
+---
+
+## 🎬 Video — `Media::video()`
+
+Serves a video file unchanged and renders a `<video>` HTML element. No transcoding is performed — the source file is copied once to the public output directory.
+
+**Supported extensions:** `mp4`, `webm`, `ogg`, `mov`
+
+```php
+// Minimal usage
+echo Media::video('resources/videos/intro.mp4')->html(class: 'w-full');
+
+// With chain options
+echo Media::video('resources/videos/hero.mp4')
+    ->controls()
+    ->muted()
+    ->autoplay()
+    ->loop()
+    ->width(1280)
+    ->height(720)
+    ->poster('resources/images/poster.jpg')
+    ->html(class: 'w-full rounded-lg', id: 'hero-video');
+
+// URL only (e.g. for custom players)
+$url = Media::video('resources/videos/clip.mp4')->url();
+```
+
+### Chain Methods
+
+| Method | Description |
+|--------|-------------|
+| `->controls(bool $show = true)` | Show/hide the native browser controls bar (default: `true`) |
+| `->autoplay()` | Start playback automatically (requires `->muted()` in most browsers) |
+| `->muted()` | Mute the audio track |
+| `->loop()` | Loop the video when it ends |
+| `->preload(string)` | Preload hint: `'none'` \| `'metadata'` (default) \| `'auto'` |
+| `->poster(string $path)` | Poster image shown before playback; same path format as the source |
+| `->width(int)` | Display width in pixels |
+| `->height(int)` | Display height in pixels |
+
+### `html()` Signature
+
+```php
+->html(string $class = '', ?string $id = null, array $attributes = []): string
+```
+
+---
+
+## 🎵 Audio — `Media::audio()`
+
+Serves an audio file unchanged and renders an `<audio>` HTML element. No transcoding is performed.
+
+**Supported extensions:** `mp3`, `ogg`, `wav`, `aac`, `m4a`, `opus`, `flac`
+
+```php
+// Minimal usage
+echo Media::audio('resources/audio/podcast.mp3')->html(class: 'w-full');
+
+// With chain options
+echo Media::audio('resources/audio/track.ogg')
+    ->controls()
+    ->preload('none')
+    ->loop()
+    ->html(class: 'w-full', id: 'audio-player');
+
+// URL only
+$url = Media::audio('resources/audio/intro.mp3')->url();
+```
+
+### Chain Methods
+
+| Method | Description |
+|--------|-------------|
+| `->controls(bool $show = true)` | Show/hide the native browser controls bar (default: `true`) |
+| `->autoplay()` | Start playback automatically |
+| `->muted()` | Mute the audio |
+| `->loop()` | Loop the audio when it ends |
+| `->preload(string)` | Preload hint: `'none'` \| `'metadata'` (default) \| `'auto'` |
+
+### `html()` Signature
+
+```php
+->html(string $class = '', ?string $id = null, array $attributes = []): string
+```
+
+---
+
+## 🖼️ SVG — `Media::svg()`
+
+Serves an SVG file as a public URL or embeds it inline in the HTML. No processing is performed.
+
+```php
+// Default: <img> tag pointing to the served SVG
+echo Media::svg('resources/images/icon.svg')->html(alt: 'Icon', class: 'w-6 h-6');
+
+// Inline SVG embedded directly in the HTML (scripts and on* handlers filtered)
+echo Media::svg('resources/images/logo.svg')
+    ->inline()
+    ->width(120)
+    ->html(alt: 'Company Logo', class: 'fill-current');
+
+// Skip sanitization (developer responsibility)
+echo Media::svg('resources/images/animation.svg')
+    ->inline(sanitize: false)
+    ->html(class: 'w-full');
+
+// URL only
+$url = Media::svg('resources/images/sprite.svg')->url();
+```
+
+### Chain Methods
+
+| Method | Description |
+|--------|-------------|
+| `->inline(bool $sanitize = true)` | Embed SVG content directly in HTML; `$sanitize = true` (default) removes `<script>` and `on*` attributes |
+| `->width(int)` | Width in pixels — applied to `<img>` or the `<svg>` element |
+| `->height(int)` | Height in pixels — applied to `<img>` or the `<svg>` element |
+
+### `html()` Signature
+
+```php
+->html(string $alt = '', string $class = '', ?string $id = null, array $attributes = []): string
+```
+
+- **Default mode**: `$alt` is the `<img alt>` attribute.
+- **Inline mode**: `$alt` sets `aria-label` and `role="img"` on the `<svg>` element.
+
+### SVG Sanitization
+
+When `->inline()` is called with the default `$sanitize = true`, the following are removed from the SVG before output:
+
+| Threat | What is removed |
+|--------|----------------|
+| Scripting | All `<script>` elements |
+| Event handlers | All `on*` attributes (e.g. `onclick`, `onload`, `onerror`) |
+| Protocol injection | `href`, `src`, `xlink:href` values starting with `javascript:` |
+
+> **Note:** This is a structural filter, not a full HTML sanitizer. For untrusted user-uploaded SVGs, use a dedicated library such as [Symfony's HtmlSanitizer](https://symfony.com/doc/current/html_sanitizer.html).
 
 ---
 

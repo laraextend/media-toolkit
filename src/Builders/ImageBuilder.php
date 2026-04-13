@@ -878,19 +878,6 @@ class ImageBuilder extends BaseBuilder
         return $resolved;
     }
 
-    /**
-     * Reject any string that contains directory-traversal sequences or null/control bytes.
-     * Used as a fast, pre-resolution guard on raw path inputs.
-     *
-     * @throws MediaBuilderException
-     */
-    private function assertNoTraversal(string $path): void
-    {
-        if (preg_match('/[\x00\r\n]/', $path) || preg_match('#(^|[/\\\\])\.\.([/\\\\]|$)#', $path)) {
-            throw new MediaBuilderException('Invalid path: directory traversal is not allowed.');
-        }
-    }
-
     /** Recognized image file extensions that the package is allowed to process. */
     private const ALLOWED_IMAGE_EXTENSIONS = [
         'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'tiff', 'tif',
@@ -921,34 +908,6 @@ class ImageBuilder extends BaseBuilder
             throw new MediaBuilderException(
                 "Invalid file type: '.{$ext}' is not an allowed image format."
             );
-        }
-    }
-
-    /**
-     * Ensure a resolved absolute path is confined within an allowed root directory.
-     *
-     * Uses realpath() when the file exists; falls back to string prefix check
-     * when the file does not yet exist (variant output paths).
-     *
-     * @throws MediaBuilderException
-     */
-    private function assertSafeResolvedPath(string $resolved, string $allowedRoot): void
-    {
-        $real = realpath($resolved);
-        $root = realpath($allowedRoot) ?: rtrim($allowedRoot, '/\\');
-
-        if ($real !== false) {
-            // File exists — check the canonicalized path.
-            if (! str_starts_with($real, $root . DIRECTORY_SEPARATOR) && $real !== $root) {
-                throw new MediaBuilderException('Invalid path: directory traversal is not allowed.');
-            }
-        } else {
-            // File does not yet exist — check the string representation.
-            $normalised = str_replace('\\', '/', $resolved);
-            $rootSlash  = rtrim(str_replace('\\', '/', $root), '/') . '/';
-            if (! str_starts_with($normalised, $rootSlash)) {
-                throw new MediaBuilderException('Invalid path: directory traversal is not allowed.');
-            }
         }
     }
 

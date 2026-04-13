@@ -19,6 +19,19 @@ abstract class TestCase extends OrchestraTestCase
 
     protected string $squareImage = 'tests/fixtures/image-optimizer/square.jpg';
 
+    // ── Media fixtures (Phase 2–4) ─────────────────────────────────────────
+
+    protected string $fixturesMediaRoot = 'tests/fixtures/media';
+
+    protected string $testVideo  = 'tests/fixtures/media/test-video.mp4';
+    protected string $testVideo2 = 'tests/fixtures/media/test-video.webm';
+
+    protected string $testAudio = 'tests/fixtures/media/test-audio.mp3';
+
+    protected string $testSvg = 'tests/fixtures/media/test-icon.svg';
+
+    protected string $testSvgWithScript = 'tests/fixtures/media/test-icon-script.svg';
+
     protected function getPackageProviders($app): array
     {
         return [
@@ -41,6 +54,7 @@ abstract class TestCase extends OrchestraTestCase
         $this->resetSingletons();
 
         $this->prepareFixtureImages();
+        $this->prepareMediaFixtures();
         $this->cleanOutputDirectories();
     }
 
@@ -124,6 +138,45 @@ abstract class TestCase extends OrchestraTestCase
         }
 
         $this->markTestSkipped('Neither GD nor Imagick is available to create fixture images.');
+    }
+
+    // ── Media fixtures (Phase 2–4) ─────────────────────────────────────────
+
+    protected function prepareMediaFixtures(): void
+    {
+        $dir = base_path($this->fixturesMediaRoot);
+        File::ensureDirectoryExists($dir, 0755, true);
+
+        // Minimal dummy MP4 — just needs to exist with the right extension.
+        if (! File::exists(base_path($this->testVideo))) {
+            File::put(base_path($this->testVideo), "\x00\x00\x00\x18ftypisom");
+        }
+
+        // Minimal dummy WebM — EBML magic bytes.
+        if (! File::exists(base_path($this->testVideo2))) {
+            File::put(base_path($this->testVideo2), "\x1A\x45\xDF\xA3");
+        }
+
+        // Minimal dummy MP3 — frame sync header bytes.
+        if (! File::exists(base_path($this->testAudio))) {
+            File::put(base_path($this->testAudio), "\xFF\xFB\x90\x00");
+        }
+
+        // Clean SVG icon.
+        File::put(base_path($this->testSvg), <<<'SVG'
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="blue"/>
+            </svg>
+            SVG);
+
+        // SVG with XSS payloads for sanitization tests.
+        File::put(base_path($this->testSvgWithScript), <<<'SVG'
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <script>alert('xss')</script>
+                <circle cx="12" cy="12" r="10" onclick="alert('click')" fill="blue"/>
+                <a href="javascript:alert('href')">link</a>
+            </svg>
+            SVG);
     }
 
     protected function assertGeneratedPublicFileExists(string $html): void
