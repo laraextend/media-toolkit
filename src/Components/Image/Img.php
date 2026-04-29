@@ -25,6 +25,7 @@ class Img extends Component
         public readonly ?int    $height         = null,
         public readonly string  $class          = '',
         public readonly ?string $format         = null,
+        public readonly ?int    $quality        = null,
         public readonly ?string $loading        = null,
         public readonly ?string $fetchpriority  = null,
         public readonly ?string $id             = null,
@@ -44,6 +45,9 @@ class Img extends Component
             }
             if ($this->format !== null) {
                 $builder->format($this->format);
+            }
+            if ($this->quality !== null) {
+                $builder->quality($this->quality);
             }
         }
 

@@ -26,6 +26,7 @@ class ImgUrl extends Component
         public readonly string  $src,
         public readonly ?int    $width    = null,
         public readonly ?string $format   = null,
+        public readonly ?int    $quality  = null,
         public readonly bool    $original = false,
     ) {}
 
@@ -41,6 +42,9 @@ class ImgUrl extends Component
             }
             if ($this->format !== null) {
                 $builder->format($this->format);
+            }
+            if ($this->quality !== null) {
+                $builder->quality($this->quality);
             }
         }
 

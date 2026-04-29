@@ -31,6 +31,7 @@ class Picture extends Component
         public readonly string  $sourceClass    = '',
         public readonly ?array  $formats        = null,
         public readonly ?string $fallbackFormat = null,
+        public readonly ?int    $quality        = null,
         public readonly ?string $loading        = null,
         public readonly ?string $fetchpriority  = null,
         public readonly ?string $sizes          = null,
@@ -56,6 +57,9 @@ class Picture extends Component
                 imgClass:    $this->imgClass,
                 sourceClass: $this->sourceClass,
             );
+            if ($this->quality !== null) {
+                $builder->quality($this->quality);
+            }
         }
 
         if ($this->loading !== null)      { $builder->loading($this->loading); }

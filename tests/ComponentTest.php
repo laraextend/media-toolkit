@@ -49,6 +49,7 @@ test('img-url component has correct default values', function (): void {
     expect($component->src)->toBe('test.jpg');
     expect($component->width)->toBeNull();
     expect($component->format)->toBeNull();        // config-based default
+    expect($component->quality)->toBeNull();       // config-based default
     expect($component->original)->toBeFalse();
 });
 
@@ -70,4 +71,52 @@ test('img component accepts extra attributes', function (): void {
         'data-lightbox' => 'gallery',
         'style'         => 'border-radius: 8px',
     ]);
+});
+
+test('img component accepts quality prop', function (): void {
+    $component = new Img(src: 'test.jpg', quality: 60);
+
+    expect($component->quality)->toBe(60);
+});
+
+test('img component quality defaults to null (uses config)', function (): void {
+    $component = new Img(src: 'test.jpg');
+
+    expect($component->quality)->toBeNull();
+});
+
+test('responsive-img component accepts quality prop', function (): void {
+    $component = new ResponsiveImg(src: 'test.jpg', quality: 60);
+
+    expect($component->quality)->toBe(60);
+});
+
+test('responsive-img component quality defaults to null (uses config)', function (): void {
+    $component = new ResponsiveImg(src: 'test.jpg');
+
+    expect($component->quality)->toBeNull();
+});
+
+test('picture component accepts quality prop', function (): void {
+    $component = new Picture(src: 'test.jpg', quality: 60);
+
+    expect($component->quality)->toBe(60);
+});
+
+test('picture component quality defaults to null (uses config)', function (): void {
+    $component = new Picture(src: 'test.jpg');
+
+    expect($component->quality)->toBeNull();
+});
+
+test('img-url component accepts quality prop', function (): void {
+    $component = new ImgUrl(src: 'test.jpg', quality: 60);
+
+    expect($component->quality)->toBe(60);
+});
+
+test('img-url component quality defaults to null (uses config)', function (): void {
+    $component = new ImgUrl(src: 'test.jpg');
+
+    expect($component->quality)->toBeNull();
 });
