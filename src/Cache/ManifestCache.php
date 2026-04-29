@@ -37,7 +37,7 @@ class ManifestCache
         int    $quality,
         bool   $noCache = false,
     ): array {
-        $hash     = $this->buildCacheHash($sourcePath, $displayWidth, $format, $singleOnly, $operationsFingerprint);
+        $hash     = $this->buildCacheHash($sourcePath, $displayWidth, $format, $singleOnly, $operationsFingerprint, $quality);
         $cacheDir = $this->publicPath . '/' . $this->outputDir . '/' . $hash;
 
         $manifestPath = $cacheDir . '/manifest.json';
@@ -132,6 +132,7 @@ class ManifestCache
             'source'                  => $sourcePath,
             'source_modified'         => $sourceModified,
             'format'                  => $format,
+            'quality'                 => $quality,
             'display_width'           => $displayWidth,
             'single_only'             => $singleOnly,
             'original_width'          => $originalWidth,
@@ -198,8 +199,9 @@ class ManifestCache
         string $format,
         bool   $singleOnly,
         string $operationsFingerprint,
+        int    $quality,
     ): ?array {
-        $hash         = $this->buildCacheHash($sourcePath, $displayWidth, $format, $singleOnly, $operationsFingerprint);
+        $hash         = $this->buildCacheHash($sourcePath, $displayWidth, $format, $singleOnly, $operationsFingerprint, $quality);
         $manifestPath = $this->publicPath . '/' . $this->outputDir . '/' . $hash . '/manifest.json';
 
         if (! File::exists($manifestPath)) {
@@ -317,7 +319,7 @@ class ManifestCache
                         singleOnly:             $manifest['single_only'] ?? false,
                         operations:             [],
                         operationsFingerprint:  $fingerprint,
-                        quality:                80,
+                        quality:                (int) ($manifest['quality'] ?? 80),
                     );
                 } catch (Throwable $e) {
                     $results['errors'][] = "Failed to regenerate {$sourcePath}: {$e->getMessage()}";
@@ -346,11 +348,13 @@ class ManifestCache
         string $format,
         bool   $singleOnly,
         string $operationsFingerprint,
+        int    $quality,
     ): string {
         $key = implode('|', [
             $sourcePath,
             $displayWidth ?? 'auto',
             $format,
+            $quality,
             $singleOnly ? 'single' : 'multi',
             $operationsFingerprint,
         ]);

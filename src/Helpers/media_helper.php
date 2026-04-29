@@ -208,6 +208,7 @@ if (! function_exists('img_url')) {
         ?int    $width    = null,
         ?string $format   = null,
         bool    $original = false,
+        ?int    $quality  = null,
     ): string {
         $builder = Media::image($src);
 
@@ -219,6 +220,9 @@ if (! function_exists('img_url')) {
             }
             if ($format !== null) {
                 $builder->format($format);
+            }
+            if ($quality !== null) {
+                $builder->quality($quality);
             }
         }
 

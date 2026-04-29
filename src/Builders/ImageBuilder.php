@@ -369,7 +369,7 @@ class ImageBuilder extends BaseBuilder
 
         // Cache-first: return cached URL directly without a memory check.
         if (! $this->disableCache) {
-            $cached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $format, true, $fingerprint);
+            $cached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $format, true, $fingerprint, $quality);
             if ($cached !== null) {
                 $targetWidth = $resolvedWidth ?? $cached[0]['width'];
 
@@ -488,7 +488,7 @@ class ImageBuilder extends BaseBuilder
         // Cache-first: if variants were already generated, serve them directly —
         // no memory check needed for reading an existing cached file.
         if (! $this->disableCache) {
-            $cached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $format, true, $fingerprint);
+            $cached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $format, true, $fingerprint, $quality);
             if ($cached !== null) {
                 $variant = $this->renderer->findClosestVariant($cached, $resolvedWidth ?? $cached[0]['width']);
                 $height  = ($resolvedHeight === null && $resolvedWidth !== null && $variant)
@@ -558,7 +558,7 @@ class ImageBuilder extends BaseBuilder
 
         // Cache-first: serve already-processed variants without a memory check.
         if (! $this->disableCache) {
-            $cached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $format, false, $fingerprint);
+            $cached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $format, false, $fingerprint, $quality);
             if ($cached !== null) {
                 return $this->renderer->buildResponsiveImgTag($cached, $alt, $resolvedWidth, $resolvedHeight, $class, $resolvedLoading, $resolvedFetchpriority, $resolvedSizes, $id, $attributes);
             }
@@ -625,17 +625,18 @@ class ImageBuilder extends BaseBuilder
         $resolvedFallback = $this->processor->safeFormat(
             $this->normalizeFormat($this->pictureFallback, $defaultFallbackFormat)
         );
+        $resolvedFallbackQuality = $this->resolveQuality($resolvedFallback);
 
         $sourceModified = File::lastModified($sourcePath);
 
         // Cache-first: check if the fallback format is already cached.
         // If yes, load all formats from cache and skip the memory check entirely.
         if (! $this->disableCache) {
-            $cachedFallback = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $resolvedFallback, false, $fingerprint);
+            $cachedFallback = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $resolvedFallback, false, $fingerprint, $resolvedFallbackQuality);
             if ($cachedFallback !== null) {
                 $cachedFormatVariants = [];
                 foreach ($resolvedFormats as $fmt) {
-                    $fmtCached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $fmt, false, $fingerprint);
+                    $fmtCached = $this->cache->getCached($sourcePath, $sourceModified, $resolvedWidth, $fmt, false, $fingerprint, $this->resolveQuality($fmt));
                     if ($fmtCached !== null) {
                         $cachedFormatVariants[$fmt] = $fmtCached;
                     }
@@ -706,7 +707,7 @@ class ImageBuilder extends BaseBuilder
                 singleOnly:             false,
                 operations:             $this->operations,
                 operationsFingerprint:  $fingerprint,
-                quality:                $this->resolveQuality($resolvedFallback),
+                quality:                $resolvedFallbackQuality,
                 noCache:                $this->disableCache,
             );
         } catch (Throwable) {

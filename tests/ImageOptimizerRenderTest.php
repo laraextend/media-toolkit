@@ -116,6 +116,26 @@ test('img_url returns paths for optimized and original variants', function (): v
     expect(public_path(ltrim($original, '/')))->toBeFile();
 });
 
+test('img_url uses a distinct cache path when quality changes', function (): void {
+    $q60 = img_url(
+        src: $this->landscapeImage,
+        width: 400,
+        format: 'jpg',
+        quality: 60,
+    );
+
+    $q90 = img_url(
+        src: $this->landscapeImage,
+        width: 400,
+        format: 'jpg',
+        quality: 90,
+    );
+
+    expect($q60)->toContain('/media/optimized/');
+    expect($q90)->toContain('/media/optimized/');
+    expect($q60)->not->toBe($q90);
+});
+
 test('missing source returns placeholder img by default and empty string for url', function (): void {
     $html = img(
         src: 'tests/fixtures/image-optimizer/missing.jpg',

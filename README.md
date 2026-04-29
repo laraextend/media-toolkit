@@ -282,7 +282,7 @@ All components use the `media` namespace and map to the `Media::image()` builder
 />
 ```
 
-**Props:** `src`, `alt`, `width`, `height`, `class`, `format`, `loading`, `fetchpriority`, `id`, `original`, `extra-attributes`
+**Props:** `src`, `alt`, `width`, `height`, `class`, `format`, `quality`, `loading`, `fetchpriority`, `id`, `original`, `extra-attributes`
 
 ---
 
@@ -298,7 +298,7 @@ All components use the `media` namespace and map to the `Media::image()` builder
 />
 ```
 
-**Additional prop:** `sizes`
+**Additional props:** `sizes`, `quality`
 
 ---
 
@@ -318,7 +318,7 @@ All components use the `media` namespace and map to the `Media::image()` builder
 />
 ```
 
-**Additional props:** `formats`, `fallback-format`, `img-class`, `source-class`
+**Additional props:** `formats`, `fallback-format`, `img-class`, `source-class`, `quality`
 
 > The Blade attribute bag (`wire:key`, `x-*`, `@*` etc.) is applied to the outer `<picture>` element. Use `extra-attributes` for the inner `<img>`.
 
@@ -330,7 +330,7 @@ All components use the `media` namespace and map to the `Media::image()` builder
 <div style="background-image: url('<x-media::img-url src="resources/images/bg.jpg" :width="1920" />')">
 ```
 
-**Props:** `src`, `width`, `format`, `original`
+**Props:** `src`, `width`, `format`, `quality`, `original`
 
 ---
 
