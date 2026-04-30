@@ -10,6 +10,7 @@ use Intervention\Image\Encoders\PngEncoder;
 use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\EncoderInterface;
+use Laraextend\MediaToolkit\DTOs\ResizeOptions;
 use Laraextend\MediaToolkit\Operations\Image\ImageOperationInterface;
 use Laraextend\MediaToolkit\Operations\Image\ResizeOperation;
 
@@ -59,13 +60,32 @@ class ImageProcessor
     ): \Intervention\Image\EncodedImage {
         $image = $this->manager->read($sourcePath);
 
+        $normalizedOperations = [];
+
+        // For multi-variant generation, keep resize(width: X) responsive to the
+        // current variant target width instead of forcing every variant to X.
+        foreach ($operations as $op) {
+            if ($op instanceof ResizeOperation) {
+                $opts = $op->options;
+
+                if ($opts->width !== null && $opts->height === null) {
+                    $normalizedOperations[] = new ResizeOperation(
+                        new ResizeOptions($targetWidth, null, $opts->allowUpscale)
+                    );
+                    continue;
+                }
+            }
+
+            $normalizedOperations[] = $op;
+        }
+
         // If there is an explicit size operation (ResizeOperation, StretchOperation, etc.),
         // we let it run at its natural place in the pipeline.
         // If there is NO size operation, we scale to targetWidth proportionally by default
         // (this handles responsive variants where no explicit resize() was chained).
         $hasSizeOp = false;
 
-        foreach ($operations as $op) {
+        foreach ($normalizedOperations as $op) {
             if ($op instanceof ResizeOperation
                 || $op instanceof \Laraextend\MediaToolkit\Operations\Image\StretchOperation
                 || $op instanceof \Laraextend\MediaToolkit\Operations\Image\FitOperation
@@ -83,7 +103,7 @@ class ImageProcessor
             $image       = $image->scale(width: $cappedWidth);
         }
 
-        foreach ($operations as $op) {
+        foreach ($normalizedOperations as $op) {
             $image = $op->apply($image);
         }
 

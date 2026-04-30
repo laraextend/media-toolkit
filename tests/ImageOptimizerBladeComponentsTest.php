@@ -98,6 +98,15 @@ test('picture blade component renders picture markup', function (): void {
         ->toContain('alt="Picture"');
 });
 
+test('picture blade component applies custom sizes to picture output', function (): void {
+    $html = Blade::render(
+        '<x-media::picture :src="$src" alt="Picture" :width="400" :formats="[\'jpg\']" fallback-format="jpg" sizes="50vw" />',
+        ['src' => $this->landscapeImage],
+    );
+
+    expect($html)->toContain('sizes="50vw"');
+});
+
 test('picture blade component forwards wire:key to picture element', function (): void {
     $component = new Picture(
         src: $this->landscapeImage,

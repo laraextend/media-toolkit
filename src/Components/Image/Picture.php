@@ -51,6 +51,10 @@ class Picture extends Component
                 $builder->resize(width: $this->width, height: $this->height);
             }
 
+            // Reuse the responsive sizes resolver for picture mode so custom
+            // sizes from the component are not lost.
+            $builder->responsive($this->sizes);
+
             $builder->picture(
                 formats:     $this->formats,
                 fallback:    $this->fallbackFormat,

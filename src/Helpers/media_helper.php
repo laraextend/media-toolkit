@@ -169,6 +169,8 @@ if (! function_exists('picture')) {
                 $builder->resize(width: $width, height: $height);
             }
 
+            $builder->responsive($sizes);
+
             $builder->picture(
                 formats:     $formats,
                 fallback:    $fallbackFormat,

@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 test('img generates optimized image with explicit width', function (): void {
@@ -80,6 +81,37 @@ test('picture generates sources and fallback image', function (): void {
         ->toContain('<img')
         ->toContain('width="400"')
         ->toContain('height="200"');
+});
+
+test('picture helper generates real variant widths for width-only resize', function (): void {
+    picture(
+        src: $this->landscapeImage,
+        alt: 'Variant widths',
+        width: 538,
+        formats: ['jpg'],
+        fallbackFormat: 'jpg',
+    );
+
+    $dirs = File::directories(public_path('media/optimized'));
+    expect($dirs)->not->toBeEmpty();
+
+    $checked = false;
+
+    foreach ($dirs as $dir) {
+        foreach (['269', '404', '538'] as $w) {
+            $file = $dir . '/landscape-' . $w . 'w.jpg';
+            if (! File::exists($file)) {
+                continue;
+            }
+
+            $dims = getimagesize($file);
+            expect($dims)->not->toBeFalse();
+            expect($dims[0])->toBe((int) $w);
+            $checked = true;
+        }
+    }
+
+    expect($checked)->toBeTrue();
 });
 
 test('picture fetchpriority high forces eager loading', function (): void {
